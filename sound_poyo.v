@@ -47,32 +47,32 @@ module sound_poyo(
     ANALOG_PORT,
   );
 
-  always @(negedge reset_n_clk) begin
-    play_mode_n <= 1;
-    read_pointer <= 0;
-    sampling_counter <= 0;
-  end
-
-  always @(negedge play_n_clk) begin
-    play_mode_n <= 0;
-    read_pointer <= 0;
-    sampling_counter <= 0;
-  end
-
-  always @(posedge clk) begin
-    if (!play_mode_n) begin
-      if (sampling_counter < SAMPLE_INTERVAL_CLK) begin
-        sampling_counter <= sampling_counter + 1;
-      end
-      else begin
-        sampling_counter <= 0;
-
-        if (read_pointer < write_pointer - 1) begin
-          read_pointer <= read_pointer + 1;
+  always @(posedge clk or negedge reset_n_clk or negedge play_n_clk) begin
+    if (!reset_n_clk) begin
+      play_mode_n <= 1;
+      read_pointer <= 0;
+      sampling_counter <= 0;
+    end
+    else if (!play_n_clk) begin
+      play_mode_n <= 0;
+      read_pointer <= 0;
+      sampling_counter <= 0;
+    end
+    else begin
+      if (!play_mode_n) begin
+        if (sampling_counter < SAMPLE_INTERVAL_CLK) begin
+          sampling_counter <= sampling_counter + 1;
         end
         else begin
-          play_mode_n <= 1;
-          read_pointer <= 0;
+          sampling_counter <= 0;
+
+          if (read_pointer < write_pointer - 1) begin
+            read_pointer <= read_pointer + 1;
+          end
+          else begin
+            play_mode_n <= 1;
+            read_pointer <= 0;
+          end
         end
       end
     end

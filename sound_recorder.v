@@ -29,7 +29,7 @@ module sound_recorder(
   reg [31:0] sampling_counter;
 
   always @(posedge clk) begin
-    if (record_n == 0) begin
+    if (!record_n) begin
       if (sampling_counter >= SAMPLE_INTERVAL_CLK && !BUSY) begin
         sampling_counter <= 0;
         CNVST_N <= 0; // start converting by CNVST_N negedge

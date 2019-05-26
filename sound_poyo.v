@@ -3,9 +3,6 @@ module sound_poyo(
   BUSY, AD7673_DATA, CNVST_N,
   ANALOG_PORT,
 );
-  parameter SOUND_SAMPLING_RATE = 44100;
-  parameter SAMPLING_DURATION = 10;
-  parameter MEMORY_SIZE = SOUND_SAMPLING_RATE * SAMPLING_DURATION;
   parameter SAMPLE_INTERVAL_CLK = 3000;
 
   input clk;
@@ -46,7 +43,7 @@ module sound_poyo(
   );
 
   sound_player sp(
-    read_data, play_mode_n || !(read_pointer < MEMORY_SIZE),
+    read_data, play_mode_n || !(read_pointer < write_pointer),
     ANALOG_PORT,
   );
 
@@ -57,9 +54,9 @@ module sound_poyo(
   end
 
   always @(negedge play_n_clk) begin
+    play_mode_n <= 0;
     read_pointer <= 0;
     sampling_counter <= 0;
-    play_mode_n <= 0;
   end
 
   always @(posedge clk) begin

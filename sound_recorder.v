@@ -27,45 +27,31 @@ module sound_recorder(
 
   reg [9:0] memory [0:MEMORY_SIZE-1];
   reg [31:0] sampling_counter;
-  reg [31:0] ad7673_data_pushed_cnt;
-  reg [31:0] ad7673_data_poped_cnt;
 
-  always @(posedge clk or negedge reset_n_clk) begin
+  // negedge BUSY : signal of finished conversion
+  always @(posedge clk or negedge reset_n_clk or negedge BUSY) begin
     if (!reset_n_clk) begin
+      CNVST_N <= 1;
       write_pointer <= 0;
       sampling_counter <= 0;
-      ad7673_data_pushed_cnt <= 0;
-      ad7673_data_poped_cnt <= 0;
     end
-    else begin
-      if (ad7673_data_pushed_cnt != ad7673_data_poped_cnt) begin
-        CNVST_N <= 1;
-        ad7673_data_poped_cnt <= ad7673_data_poped_cnt + 1;
+    else if (!BUSY && !CNVST_N) begin
+      CNVST_N <= 1;
 
-        if (write_pointer < MEMORY_SIZE) begin
-          memory[write_pointer] <= AD7673_DATA[9:0];
-          write_pointer <= write_pointer + 1;
-        end
-
-      end
-      else begin
-        if (!record_n) begin
-
-          if (sampling_counter >= SAMPLE_INTERVAL_CLK && !BUSY) begin
-            sampling_counter <= 0;
-            CNVST_N <= 0; // start converting by CNVST_N negedge
-          end
-          else if (sampling_counter < SAMPLE_INTERVAL_CLK) begin
-            sampling_counter <= sampling_counter + 1;
-          end
-
-        end
+      if (write_pointer < MEMORY_SIZE) begin
+        memory[write_pointer] <= AD7673_DATA[9:0];
+        write_pointer <= write_pointer + 1;
       end
     end
-  end
-
-  always @(negedge BUSY) begin // signal of finished conversion
-    ad7673_data_pushed_cnt <= ad7673_data_pushed_cnt + 1;
+    else if (!record_n) begin
+      if (sampling_counter >= SAMPLE_INTERVAL_CLK && !BUSY) begin
+        sampling_counter <= 0;
+        CNVST_N <= 0; // start converting by CNVST_N negedge
+      end
+      else if (sampling_counter < SAMPLE_INTERVAL_CLK) begin
+        sampling_counter <= sampling_counter + 1;
+      end
+    end
   end
 
   assign read_data = (read_pointer < write_pointer) ? memory[read_pointer] : 10'bZ;

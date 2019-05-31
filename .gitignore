@@ -1,1 +1,7 @@
 a.out
+*.bak
+db/
+incremental_db/
+greybox_tmp/
+.qsys_edit/
+output_files/

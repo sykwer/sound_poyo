@@ -12,12 +12,12 @@ module sound_recorder(
   // sound sampling rate: 44.1KHz
   // 125M / 44.1K = 3000
   parameter SAMPLE_INTERVAL_CLK = 6000;
-  
+
   parameter NEUTRAL_MODE = 0;
   parameter WAIT_STARTUP_MODE = 1;
   parameter WAIT_CONVERSION_MODE = 2;
   parameter WRITE_MEMORY_MODE = 3;
-  
+
   // occilator = 8ns/clk, negedge-posedge duration of CNVST_N = 23-70ns
   parameter WAIT_STARTUP_CLK = 5;
 
@@ -49,7 +49,7 @@ module sound_recorder(
 
   // AD7673_DATA[17:8]
   memory memory(addr2mem, clk, data2mem, !write_enable_n, mem2out);
-  
+
   // for debug
   output [7:0] led;
   assign led[0] = BUSY;
@@ -63,58 +63,58 @@ module sound_recorder(
 
   always @(posedge clk or negedge reset_n_clk) begin
     if (!reset_n_clk) begin
-	   CNVST_N <= 1;
-		write_pointer <= 0;
-		sampling_counter <= 0;
-		write_enable_n <= 1;
-		reset_write_enable_n <= 1;
-		adc_control_mode <= NEUTRAL_MODE;
-		wait_startup_clk_cnt <= 0;
-	 end
-	 else begin
-	   if (adc_control_mode == NEUTRAL_MODE) begin
-		  if (!record_n && sampling_counter >= SAMPLE_INTERVAL_CLK) begin
-		    CNVST_N <= 0;
-		    sampling_counter <= 0;
-			 wait_startup_clk_cnt <= 0;
-			 adc_control_mode <= WAIT_STARTUP_MODE;
-		  end
-		end
-		else if (adc_control_mode == WAIT_STARTUP_MODE) begin
-		  if (wait_startup_clk_cnt <= WAIT_STARTUP_CLK) begin
-		    wait_startup_clk_cnt <= wait_startup_clk_cnt + 1;
-		  end
-		  else begin
-		    CNVST_N <= 1;
-		    adc_control_mode <= WAIT_CONVERSION_MODE;
-		  end
-		end
-		else if (adc_control_mode == WAIT_CONVERSION_MODE) begin
-		  if (!BUSY) begin
-		    write_enable_n <= 0;
-			 reset_write_enable_n <= 1;
-			 adc_control_mode <= WRITE_MEMORY_MODE;
-		  end
-		end
-		else if (adc_control_mode == WRITE_MEMORY_MODE) begin
-		  if (!reset_write_enable_n) begin
-		    write_enable_n <= 1;
-			 
-			 if (write_pointer < MEMORY_SIZE - 1) begin
-			   write_pointer <= write_pointer + 1;
-			 end
-			 
-			 adc_control_mode <= NEUTRAL_MODE;
-		  end
-		  else begin
-		    reset_write_enable_n <= 0;
-		  end
-		end
-		
-		if (!record_n && sampling_counter <= SAMPLE_INTERVAL_CLK) begin
-		  sampling_counter <= sampling_counter + 1;
-		end
-	 end
+      CNVST_N <= 1;
+      write_pointer <= 0;
+      sampling_counter <= 0;
+      write_enable_n <= 1;
+      reset_write_enable_n <= 1;
+      adc_control_mode <= NEUTRAL_MODE;
+      wait_startup_clk_cnt <= 0;
+	  end
+    else begin
+      if (adc_control_mode == NEUTRAL_MODE) begin
+        if (!record_n && sampling_counter >= SAMPLE_INTERVAL_CLK) begin
+          CNVST_N <= 0;
+          sampling_counter <= 0;
+          wait_startup_clk_cnt <= 0;
+          adc_control_mode <= WAIT_STARTUP_MODE;
+        end
+      end
+      else if (adc_control_mode == WAIT_STARTUP_MODE) begin
+        if (wait_startup_clk_cnt <= WAIT_STARTUP_CLK) begin
+          wait_startup_clk_cnt <= wait_startup_clk_cnt + 1;
+        end
+        else begin
+          CNVST_N <= 1;
+          adc_control_mode <= WAIT_CONVERSION_MODE;
+        end
+      end
+      else if (adc_control_mode == WAIT_CONVERSION_MODE) begin
+        if (!BUSY) begin
+          write_enable_n <= 0;
+         reset_write_enable_n <= 1;
+         adc_control_mode <= WRITE_MEMORY_MODE;
+        end
+      end
+      else if (adc_control_mode == WRITE_MEMORY_MODE) begin
+        if (!reset_write_enable_n) begin
+          write_enable_n <= 1;
+
+          if (write_pointer < MEMORY_SIZE - 1) begin
+            write_pointer <= write_pointer + 1;
+          end
+
+          adc_control_mode <= NEUTRAL_MODE;
+        end
+        else begin
+          reset_write_enable_n <= 0;
+        end
+      end
+
+      if (!record_n && sampling_counter <= SAMPLE_INTERVAL_CLK) begin
+        sampling_counter <= sampling_counter + 1;
+      end
+    end
   end
 
   assign read_data = (read_pointer < write_pointer) ? mem2out : 10'bZ;

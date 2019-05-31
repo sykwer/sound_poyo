@@ -36,7 +36,7 @@ module sound_poyo(
   // outputs from sound recorder
   wire [9:0] read_data;
   wire [14:0] write_pointer;
-  
+
   // for debug
   wire [7:0] sr2led;
   output [7:0] led;
@@ -67,29 +67,29 @@ module sound_poyo(
       read_pointer <= 0;
       sampling_counter <= 0;
     end
-	 else begin
-	   if (!play_n_clk) begin
-		  play_mode_n <= 0;
-		  read_pointer <= 0;
-		  sampling_counter <= 0;
-		end
-		else if (!play_mode_n) begin
-		  if (sampling_counter < SAMPLE_INTERVAL_CLK) begin
-		    sampling_counter <= sampling_counter + 1;
+	  else begin
+	    if (!play_n_clk) begin
+        play_mode_n <= 0;
+        read_pointer <= 0;
+        sampling_counter <= 0;
 		  end
-		  else begin
-		    sampling_counter <= 0;
-			 
-			 if (read_pointer < write_pointer - 1) begin
-			   read_pointer <= read_pointer + 1;
-			 end
-			 else begin
-			   play_mode_n <= 1;
-				read_pointer <= 0;
-			 end
-		  end
-		end
-	 end
+		  else if (!play_mode_n) begin
+        if (sampling_counter < SAMPLE_INTERVAL_CLK) begin
+          sampling_counter <= sampling_counter + 1;
+        end
+        else begin
+          sampling_counter <= 0;
+
+          if (read_pointer < write_pointer - 1) begin
+            read_pointer <= read_pointer + 1;
+          end
+          else begin
+            play_mode_n <= 1;
+            read_pointer <= 0;
+          end
+        end
+      end
+	  end
   end
 
   assign high = 1;
